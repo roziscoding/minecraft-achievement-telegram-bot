@@ -1,0 +1,20 @@
+{
+  "name": "minecraft-achievement-telegram-bot",
+  "version": "1.0.0",
+  "description": "A Telegram chatbot to generate minecraft achievements",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "start:debug": "DEBUG=botify:*,minecraft-achievement-telegram-bot:* nodemon --inspect index.js"
+  },
+  "keywords": [],
+  "author": "Rogério Munhoz <rogerio.j.munhoz@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^1.18.4"
+  },
+  "dependencies": {
+    "@rjmunhoz/botify": "^2.2.4",
+    "bson-objectid": "^1.2.4"
+  }
+}
