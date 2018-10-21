@@ -22,8 +22,23 @@ const exampleText = [
   'You\'re a good boy! Here\'s a cookie!'
 ].join('\n')
 
+const notifyFailure = (bot, config, message) => {
+  bot.telegram.sendMessage(config.chatId, `\`\`\`${message}\`\`\``, { parse_mode: 'Markdown' })
+      .catch(console.error)
+}
+
+const rescueFactory = (bot, config) => (fn) => (...args) => {
+  try {
+    fn(...args)
+  } catch (err) {
+    notifyFailure(bot, config, JSON.stringify(err, null, 2))
+  }
+}
+
 const botFactory = botify((bot, config) => {
-  bot.command(['start', 'help'], ({ reply }) => {
+  const rescue = rescueFactory(bot, config)
+
+  bot.command(['start', 'help'], rescue(({ reply }) => {
     const lines = [
       'Hi there!',
       'Use me inline to create minecraft achievement images!',
@@ -53,9 +68,9 @@ const botFactory = botify((bot, config) => {
         ]
       }
     })
-  })
+  }))
 
-  bot.command('icons', ({ reply }) => {
+  bot.command('icons', rescue(({ reply }) => {
     const lines = [
       'Here are the currently available icons:',
       ...icons.names.map(name => `- ${name}`)
@@ -73,9 +88,9 @@ const botFactory = botify((bot, config) => {
         ]
       }
     })
-  })
+  }))
 
-  bot.on('inline_query', async ({ inlineQuery: query, answerInlineQuery }) => {
+  bot.on('inline_query', rescue(async ({ inlineQuery: query, answerInlineQuery }) => {
     const options = query.query.split('\n')
 
     const replyOptions = {
@@ -101,9 +116,12 @@ const botFactory = botify((bot, config) => {
       id: new ObjectId().toString(),
       sticker_file_id: stickerId
     }], replyOptions)
-  })
+  }))
 
-  bot.on('chosen_inline_result', console.log)
+  bot.catch(err => {
+    notifyFailure(bot, config, JSON.stringify(err, null, 4))
+      .catch(console.error)
+  })
 })
 
 const bot = botFactory(config, process.env.NODE_ENV)
