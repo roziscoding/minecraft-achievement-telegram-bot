@@ -15,6 +15,8 @@
   },
   "dependencies": {
     "@rjmunhoz/botify": "^2.2.4",
-    "bson-objectid": "^1.2.4"
+    "axios": "^0.18.0",
+    "bson-objectid": "^1.2.4",
+    "sharp": "^0.21.0"
   }
 }

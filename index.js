@@ -1,15 +1,18 @@
+'use strict'
+
 const icons = require('./icons')
 const config = require('./config')
+const { format } = require('util')
+const sticker = require('./sticker')
 const ObjectId = require('bson-objectid')
 const botify = require('@rjmunhoz/botify')
-const { format } = require('util')
 
 const getUrl = (icon, header, text) => {
   return format(
     'https://www.minecraftskinstealer.com/achievement/a.php?i=%s&h=%s&t=%s',
     icons[icon],
     encodeURIComponent(header),
-    encodeURIComponent(text)
+    encodeURIComponent(text.replace(/#/ig, ''))
   )
 }
 
@@ -28,8 +31,9 @@ const botFactory = botify((bot, config) => {
       '```',
       `@${config.telegram.username} icon`,
       'header',
-      'text',
+      'text#',
       '```',
+      'Your input **must** end with `#`, otherwise it won\'t be processed',
       'If you want to see a list of the icons, send /icons',
       'That\'s it! Click the button below to go inline!'
     ]
@@ -71,7 +75,7 @@ const botFactory = botify((bot, config) => {
     })
   })
 
-  bot.on('inline_query', ({ inlineQuery: query, answerInlineQuery }) => {
+  bot.on('inline_query', async ({ inlineQuery: query, answerInlineQuery }) => {
     const options = query.query.split('\n')
 
     const replyOptions = {
@@ -79,7 +83,7 @@ const botFactory = botify((bot, config) => {
       switch_pm_parameter: 'help'
     }
 
-    if (options.length !== 3) {
+    if (options.length !== 3 || !options[2].includes('#')) {
       try {
         return answerInlineQuery([], replyOptions)
       } catch (err) {
@@ -89,14 +93,17 @@ const botFactory = botify((bot, config) => {
 
     const url = getUrl(...options)
 
+    const stickerId = await sticker.using(config, bot)
+      .uploadFromUrl(url)
+
     answerInlineQuery([{
-      type: 'photo',
+      type: 'sticker',
       id: new ObjectId().toString(),
-      photo_url: url,
-      thumb_url: url,
-      photo_width: 512
+      sticker_file_id: stickerId
     }], replyOptions)
   })
+
+  bot.on('chosen_inline_result', console.log)
 })
 
 const bot = botFactory(config, process.env.NODE_ENV)

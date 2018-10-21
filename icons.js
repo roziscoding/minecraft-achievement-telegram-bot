@@ -1,3 +1,5 @@
+'use strict'
+
 const dictionary = [
   { name: 'Stone', number: 20 },
   { name: 'Grass', number: 1 },
